@@ -14,15 +14,16 @@ import { JwtService } from '../../services/JwtService';
 
 const styles = (theme: any) => createStyles({
     button: {
-        marginRight: theme.spacing(1),
-        
+        marginRight: theme.spacing(1),        
     },
     buttons: {
         marginLeft: 'auto',
     }
 });
 
-type Props = {} & WithStyles<typeof styles>;
+type Props = {
+    onLogin();
+} & WithStyles<typeof styles>;
 
 type States = {
     isOpen: boolean;
@@ -73,6 +74,7 @@ class LoginDialog extends Component<Props, States> {
             const response = await signInResponse.json();
             JwtService.setToken(response.token);
             this.handleClose();
+            this.props.onLogin();
         } else {
             // Вывести ошибку
             this.setState({password: ''});

@@ -17,20 +17,21 @@ const styles = (theme: any) => createStyles({
     }
 });
 
-type Props = {} & WithStyles<typeof styles>;
+type Props = {
+    onLogin();
+} & WithStyles<typeof styles>;
 
 
 class MainView extends Component<Props> {
     render() {
-        const {classes} = this.props;
-
+        const {classes, onLogin} = this.props;
         return(
             <>
             <AppBar position="static" color="primary">
                 <Toolbar className={classes.toolBar}>
                     <div className={classes.buttons}>
                         <RegisterCompanyDialog/>
-                        <LoginDialog/>
+                        <LoginDialog onLogin={onLogin}/>
                     </div>
                 </Toolbar>
             </AppBar>
