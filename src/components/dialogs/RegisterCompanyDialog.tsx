@@ -5,6 +5,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    LinearProgress,
     Step,
     StepLabel,
     Stepper,
@@ -13,11 +14,15 @@ import {
     withStyles,
     WithStyles
 } from '@material-ui/core';
-import { Label } from '@material-ui/icons';
 import React, { Component } from 'react'
 import InputMask from "react-input-mask";
+import { SignupDto } from '../../models/SignupDto';
+import { ApiService } from '../../services/ApiService';
 
 const styles = (theme: any) => createStyles({
+    stepperRoot: {
+        padding: "10px 24px 24px 24px"
+    },
     button: {
         marginRight: theme.spacing(1),
 
@@ -31,7 +36,8 @@ type Props = {} & WithStyles<typeof styles>;
 
 type States = {
     isOpen: boolean;
-
+    isLoading: boolean;
+    
     currentStep: number;
 
     companyName: string;
@@ -47,11 +53,15 @@ type States = {
 const Steps = [{ id: 1, name: "Регистрация компании" }, { id: 2, name: "Регистрация администратора компании" }];
 
 class RegisterCompanyDialog extends Component<Props, States> {
+    inviteCode: string;
+
     constructor(props: Props) {
         super(props);
-
+        this.inviteCode = '';
+        
         this.state = {
             isOpen: false,
+            isLoading: false,
             currentStep: 0,
 
             companyName: '',
@@ -65,41 +75,63 @@ class RegisterCompanyDialog extends Component<Props, States> {
         };
     }
 
-    handleCompanyNameChange = (value: string) => {
-        this.setState({ companyName: value });
+    handleCompanyChange = (value: string) => {
+        this.inviteCode = '';
+        this.setState({ companyName: value })
     }
 
-
-    handleClickOpen = () => {
-        this.setState({ isOpen: true });
-    };
-
     handleClose = () => {
-        this.setState({ isOpen: false });
-
-        this.setState({ companyName: '', firstName: '', secondName: '', phone: '', login: '', password: '' });
-        // Попытка избавится от эффекта перезаписи (после заврешения загружается первый шаг :( )
-        this.setState({ currentStep: 0 });
+        if (this.state.isLoading) return;
+        
+        if (this.inviteCode !== '') {
+            this.setState({ isOpen: false, firstName: '', secondName: '', phone: '', login: '', password: '' });
+        } else {
+            this.setState({ currentStep: 0, isOpen: false, companyName: '', firstName: '', secondName: '', phone: '', login: '', password: '' });
+        }
     };
+    handleSuccessClose = () => {
+        this.inviteCode = '';
+        this.setState({ currentStep: 0, isOpen: false, isLoading: false, companyName: '', firstName: '', secondName: '', phone: '', login: '', password: '' });
+    }
 
-    handleNext = () => {
-        const {currentStep} = this.state;
+    handleNext = async () => {
+        const {currentStep, companyName} = this.state;
+        this.setState({isLoading: true})
 
-        if (currentStep === Steps.length) {
-            // Отправить инфу на сервер
-            this.handleClose();        
+        if (currentStep === Steps.length - 1) {
+            const {login, password, phone, firstName, secondName} = this.state;
+            
+            if (this.inviteCode === '') {
+                const companyResponse = await ApiService.createCompany(companyName)
+                    .finally(() => this.setState({isLoading: false}));
+                
+                if (companyResponse?.ok) {
+                    const response = await companyResponse.json();
+                    this.inviteCode = response.inviteCode;
+                } else {
+                    // Вывести ошибку
+                    return;
+                }
+            }
+
+            this.setState({isLoading: true})
+            const dto = new SignupDto(login, password, firstName, secondName, phone);
+            const userResponse = await ApiService.signUp(dto, this.inviteCode)
+            
+            this.setState({isLoading: false});
+            if (userResponse?.ok) {
+
+            } else {
+                // Вывести ошибку
+                return;
+            }
+        }
+        if(currentStep === Steps.length) {
+            this.handleSuccessClose();
             return;
         }
-        if (currentStep === 0) {
-            // Отправить инфу на сервер, проверить имя компании, если все окей, идем дальше
-            this.setState({ currentStep: currentStep + 1 })
-            return;
-        }
-        if (currentStep === 1) {
-            // Отправить инфу на сервер, проверить имя компании, если все окей, идем дальше
-            this.setState({ currentStep: currentStep + 1 })
-            return;
-        }
+        
+        this.setState({ isLoading: false, currentStep: currentStep + 1 })
     }
     handleBack = () => {
         const {currentStep} = this.state;
@@ -129,6 +161,8 @@ class RegisterCompanyDialog extends Component<Props, States> {
             }
         }
     }
+
+
     renderCompanyStep = () => {
         return(
             <div>
@@ -139,7 +173,7 @@ class RegisterCompanyDialog extends Component<Props, States> {
                         type="text"
                         fullWidth
                         value={this.state.companyName}
-                        onChange={x => this.handleCompanyNameChange(x.target.value)}/>
+                        onChange={x => this.handleCompanyChange(x.target.value)}/>
             </div>
         );
     }
@@ -190,7 +224,7 @@ class RegisterCompanyDialog extends Component<Props, States> {
     }
 
     buttonIsDisabled = (): boolean => {
-        const {currentStep, companyName, firstName, secondName, phone, login, password } = this.state;
+        const {isLoading, currentStep, companyName, firstName, secondName, phone, login, password } = this.state;
 
         if (currentStep === 0) {
             return companyName === '';
@@ -200,7 +234,8 @@ class RegisterCompanyDialog extends Component<Props, States> {
                 secondName === '' || 
                 phone === '' || 
                 login === '' || 
-                password === '';
+                password === '' ||
+                isLoading;
         }
         
         return false;
@@ -208,21 +243,24 @@ class RegisterCompanyDialog extends Component<Props, States> {
 
     render() {
         const { classes } = this.props;
-        const { isOpen, currentStep } = this.state;
+        const { isOpen, isLoading, currentStep } = this.state;
 
         return (
             <>
                 <Button className={classes.button}
                     variant="contained"
                     color="default"
-                    onClick={this.handleClickOpen}>
+                    onClick={() => this.setState({ isOpen: true })}>
                     Зарегистрироваться
                 </Button>
                 <Dialog open={isOpen} onClose={this.handleClose}>
+                    {isLoading && <LinearProgress/>}
                     <DialogTitle>Регистрация</DialogTitle>
                     <DialogContent>
-                        <div>
-                            <Stepper activeStep={currentStep}>
+                        <div >
+                            <Stepper 
+                                className={classes.stepperRoot}
+                                activeStep={currentStep}>
                                 {Steps.map(x => <Step key={x.id}>
                                             <StepLabel>{x.name}</StepLabel>
                                         </Step>)}
@@ -232,10 +270,12 @@ class RegisterCompanyDialog extends Component<Props, States> {
                         </div>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={this.handleBack} 
+                        {currentStep === Steps.length &&
+                        <Button disabled={isLoading}
+                                onClick={this.handleBack} 
                                 className={classes.button}>
                             {currentStep === 0 ? 'Отмена' : 'Назад'}
-                        </Button>
+                        </Button>}
                         <Button disabled={this.buttonIsDisabled()}
                             variant="contained"
                             color="primary"

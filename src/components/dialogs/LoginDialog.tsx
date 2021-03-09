@@ -1,5 +1,16 @@
-import { Dialog, DialogContent, DialogTitle, DialogActions, Button, TextField, WithStyles, createStyles, withStyles } from '@material-ui/core';
+import { Dialog, 
+         DialogContent, 
+         DialogTitle, 
+         DialogActions, 
+         Button, 
+         TextField, 
+         WithStyles, 
+         createStyles, 
+         withStyles,
+         LinearProgress } from '@material-ui/core';
 import React, { Component } from 'react'
+import { ApiService } from '../../services/ApiService';
+import { JwtService } from '../../services/JwtService';
 
 const styles = (theme: any) => createStyles({
     button: {
@@ -15,6 +26,7 @@ type Props = {} & WithStyles<typeof styles>;
 
 type States = {
     isOpen: boolean;
+    isLoading: boolean;
 
     login: string;
     password: string;
@@ -27,6 +39,8 @@ class LoginDialog extends Component<Props, States> {
 
         this.state = {
             isOpen: false,
+            isLoading: false,
+
             login: '',
             password: ''
         };
@@ -48,13 +62,26 @@ class LoginDialog extends Component<Props, States> {
         this.setState({ isOpen: false, login: '', password: '' });
     };
 
-    handleLogin = () => {
-        this.handleClose();
+    handleLogin = async () => {
+        const {login, password} = this.state;
+        this.setState({isLoading: true})
+
+        const signInResponse = await ApiService.signIn(login, password)
+            .finally(() => this.setState({isLoading: false}));
+        
+        if(signInResponse.ok) {
+            const response = await signInResponse.json();
+            JwtService.setToken(response.token);
+            this.handleClose();
+        } else {
+            // Вывести ошибку
+            this.setState({password: ''});
+        }
     };
 
     render() {
         const { classes } = this.props;
-        const { isOpen, login, password } = this.state;
+        const { isOpen, isLoading, login, password } = this.state;
 
         return (
             <>
@@ -64,6 +91,7 @@ class LoginDialog extends Component<Props, States> {
                         onClick={this.handleClickOpen}>Войти
                 </Button>
                 <Dialog open={isOpen} onClose={this.handleClose}>
+                    {isLoading && <LinearProgress/>}
                     <DialogTitle>Войти в пространство компании</DialogTitle>
                     <DialogContent>
                         <TextField
@@ -72,6 +100,7 @@ class LoginDialog extends Component<Props, States> {
                             label="Логин"
                             type="text"
                             fullWidth
+                            value={login}
                             onChange={x => this.handleLoginChange(x.target.value)}
                         />
                         <TextField
@@ -80,15 +109,16 @@ class LoginDialog extends Component<Props, States> {
                             label="Пароль"
                             type="password"
                             fullWidth
+                            value={password}
                             onChange={x => this.handlePasswordChange(x.target.value)}
                         />
                     </DialogContent>
                     <DialogActions>
-                    <Button onClick={this.handleLogin}
+                        <Button onClick={this.handleClose}
                             className={classes.button}>
                             Отмена
                         </Button>
-                        <Button disabled={login === '' || password === ''}
+                        <Button disabled={login === '' || password === '' || isLoading}
                             variant="contained"
                             color="primary"
                             onClick={this.handleLogin} 

@@ -10,8 +10,8 @@ class App extends Component {
         // 
         return(
             <div>
-                {/* <MainView/> */}
-                <WorkspaceView/>
+                <MainView/>
+                {/* <WorkspaceView/> */}
             </div>
         );
   }

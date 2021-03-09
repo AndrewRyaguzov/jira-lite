@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
-import { AppBar, Button, IconButton, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Toolbar} from '@material-ui/core';
 import { createStyles, withStyles, WithStyles } from '@material-ui/core/styles';
-import MenuIcon from '@material-ui/icons/Menu';
 import LoginDialog from './dialogs/LoginDialog';
 import RegisterCompanyDialog from './dialogs/RegisterCompanyDialog';
 
