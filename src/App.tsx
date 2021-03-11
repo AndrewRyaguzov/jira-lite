@@ -7,6 +7,7 @@ import { JwtService } from './services/JwtService';
 
 type States = {
     loggedIn: boolean;
+    isAdmin: boolean;
 }
 
 class App extends Component<{},States> {
@@ -14,13 +15,17 @@ class App extends Component<{},States> {
         super(props);
 
         let loggedIn = false;
-        if (JwtService.getToken()) {
+        let isAdmin = false;
+        const token = JwtService.getToken();
+        if (token) {
             // TODO: Влепить проверку, что у меня в сторедже вообще нормальный токен, а не мусор
             loggedIn = true;
+            isAdmin = token.roles.some(x => x === 'ADMIN');
         }
 
         this.state = {
-            loggedIn: loggedIn
+            loggedIn: loggedIn,
+            isAdmin: isAdmin
         }
     }
     
@@ -32,7 +37,7 @@ class App extends Component<{},States> {
     }
 
     render() {
-        const { loggedIn } = this.state;
+        const { loggedIn, isAdmin } = this.state;
         return(
             <div>
                 <Router>
@@ -40,7 +45,7 @@ class App extends Component<{},States> {
                         {loggedIn ? <Redirect to="/workspace" /> : <MainView onLogin={this.handleLogin}/>}
                     </Route>
                     <Route exact path="/workspace">
-                        {loggedIn ? <WorkspaceView/> : <Redirect to="/"/>}
+                        {loggedIn ? <WorkspaceView isAdmin={isAdmin}/> : <Redirect to="/"/>}
                     </Route>
                 </Router>
             </div>
