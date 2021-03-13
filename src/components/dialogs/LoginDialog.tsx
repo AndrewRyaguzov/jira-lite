@@ -10,7 +10,7 @@ import { Dialog,
          LinearProgress } from '@material-ui/core';
 import React, { Component } from 'react'
 import { ApiService } from '../../services/ApiService';
-import { JwtService } from '../../services/JwtService';
+import { StorageService } from '../../services/StorageService';
 
 const styles = (theme: any) => createStyles({
     button: {
@@ -72,7 +72,8 @@ class LoginDialog extends Component<Props, States> {
         
         if(signInResponse.ok) {
             const response = await signInResponse.json();
-            JwtService.setToken(response.token);
+            StorageService.setToken(response.token);
+            StorageService.setCompany(response.company.id);
             this.handleClose();
             this.props.onLogin();
         } else {

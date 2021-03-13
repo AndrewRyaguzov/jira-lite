@@ -1,5 +1,5 @@
 import { SignupDto } from "../models/SignupDto";
-import { JwtService } from "./JwtService";
+import { StorageService } from "./StorageService";
 const pathBase = "http://localhost:10000";
 const bearer = "Bearer_" ;
 export class ApiService {
@@ -25,36 +25,37 @@ export class ApiService {
             headers: { 'Content-Type': 'application/json' }
         });
     }
-    static getCompanyUsers = (company_id: string) => {
-        const auth = bearer + JwtService.getToken();
+    static getCompanyUsers = () => {
+        const company_id = StorageService.getCompany();
+        const auth = bearer + StorageService.getToken();
         return fetch(pathBase + '/admin/users/' + company_id, {
             method: 'GET',
             headers: { 'Authorization': auth}
         });
     }
     static setUserAdmin = (user_id: string) => {
-        const auth = bearer + JwtService.getToken();
+        const auth = bearer + StorageService.getToken();
         return fetch(pathBase + '/admin​/company​/' + user_id + '/set-admin', {
             method: 'POST',
             headers: { 'Authorization': auth}
         });
     }
     static setUserNotAdmin = (user_id: string) => {
-        const auth = bearer + JwtService.getToken();
+        const auth = bearer + StorageService.getToken();
         return fetch(pathBase + '/admin​/company​/' + user_id + '/remove-admin', {
             method: 'POST',
             headers: { 'Authorization': auth}
         });
     }
     static setUserArchived = (user_id: string) => {
-        const auth = bearer + JwtService.getToken();
+        const auth = bearer + StorageService.getToken();
         return fetch(pathBase + '/admin​/company​/' + user_id + '/archive', {
             method: 'POST',
             headers: { 'Authorization': auth}
         });
     }
     static setUserActive = (user_id: string) => {
-        const auth = bearer + JwtService.getToken();
+        const auth = bearer + StorageService.getToken();
         return fetch(pathBase + '/admin​/company​/' + user_id + '/archive', {
             method: 'POST',
             headers: { 'Authorization': auth}

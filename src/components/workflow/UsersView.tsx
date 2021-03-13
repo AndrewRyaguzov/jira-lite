@@ -2,7 +2,7 @@ import { Component } from 'react'
 import React from 'react';
 import { AppBar, Button, createStyles, IconButton, Toolbar, withStyles, WithStyles } from '@material-ui/core';
 
-import { DataGrid, GridCellParams, GridColDef, GridRowSelectedParams, GridSelectionModelChangeParams, ValueGetterParams } from '@material-ui/data-grid';
+import { DataGrid, GridColDef, GridSelectionModelChangeParams } from '@material-ui/data-grid';
 
 import SupervisorAccountOutlinedIcon from '@material-ui/icons/SupervisorAccountOutlined';
 import CheckCircleOutlineOutlinedIcon from '@material-ui/icons/CheckCircleOutlineOutlined';
@@ -12,16 +12,16 @@ import { ApiService } from '../../services/ApiService';
 import { UserDto } from '../../models/UserDto';
 
 const columns: GridColDef[] = [
-    { field: 'lastName', headerName: 'Фамилия', width: 130 },
-    { field: 'firstName', headerName: 'Имя', width: 130 },
+    { field: 'lastName', headerName: 'Фамилия', width: 250 },
+    { field: 'firstName', headerName: 'Имя', width: 250 },
     { field: 'type', headerName: 'Тип',  width: 130 },
-    { field: 'phone', headerName: 'Телефон',  width: 130 },
+    { field: 'phone', headerName: 'Телефон',  width: 200 },
     { field: 'status', headerName: 'Статус',  width: 130 },
   ];
 
 const styles = (theme: any) => createStyles({
-    toolBar: {
-        height: '80px'
+    filter: {
+        height: '70px'
     },
     button: {
         marginRight: theme.spacing(1),
@@ -33,7 +33,7 @@ const styles = (theme: any) => createStyles({
 
 type Props = {} & WithStyles<typeof styles>;
 type States = {
-    rows: UserDto[];
+    data: UserDto[];
     selectedIds: string[];
     isLoading: boolean;
 }
@@ -42,7 +42,7 @@ class UsersView extends Component<Props, States> {
         super(props);
 
         this.state = {
-            rows: [] as UserDto[],
+            data: [] as UserDto[],
             selectedIds: [] as string[],
             isLoading: false,
         };
@@ -53,16 +53,16 @@ class UsersView extends Component<Props, States> {
     }
     fetchUsers = () => {
         this.setState({isLoading: true});
-        ApiService.getCompanyUsers("")
+        ApiService.getCompanyUsers()
         .then(x => x.json())
         .then(x => {
-            this.setState({ rows: JSON.parse(x) as UserDto[], isLoading: false })
+            this.setState({ data: JSON.parse(x) as UserDto[], isLoading: false })
         })
         .finally(() => this.setState({ isLoading: false }));
     }
     getRows = () => {
         //return [{id: 121, lastName: 'Snow', firstName: 'Jon', type: "Что-то", phone: "+799999999", status: "UserStat" }];
-        return this.state.rows.map(x => {
+        return this.state.data.map(x => {
             return {
             id: x.id,
             lastName: x.lastName, 
@@ -79,8 +79,8 @@ class UsersView extends Component<Props, States> {
 
     handleSetAdmin = () => {
         const id = this.state.selectedIds[0];
-        const index = this.state.rows.findIndex(x => x.id === id);
-        const data =  this.state.rows[index];
+        const index = this.state.data.findIndex(x => x.id === id);
+        const data =  this.state.data[index];
 
         if(data.isAdmin) {
             ApiService.setUserNotAdmin(id)
@@ -117,14 +117,12 @@ class UsersView extends Component<Props, States> {
 
     render() {
         const { classes } = this.props;
-        const preparedRows = this.getRows();
-
+        
         return (
             <>
-
                 <AppBar position="static" color='default'>
-                    <Toolbar>
-                        Кнопки фильтрации
+                    <Toolbar className={classes.filter}>
+                        (Кнопки фильтрации или нет, надеюсь нет)
                         <div className={classes.buttons}>
                             <IconButton onClick={this.handleSetAdmin} disabled={this.state.selectedIds.length !== 1}>
                                 <SupervisorAccountOutlinedIcon />
@@ -139,10 +137,12 @@ class UsersView extends Component<Props, States> {
                     </Toolbar>
                 </AppBar>
                 <div style={{ width: '100%' }}>
-                    <DataGrid rows={preparedRows} 
-                              columns={columns} 
-                              checkboxSelection 
-                              autoHeight 
+                    <DataGrid rows={this.getRows()}
+                              columns={columns}
+                              checkboxSelection
+                              autoHeight
+                              pageSize={25}
+                              rowsPerPageOptions={[25]}
                               loading={this.state.isLoading}
                               onSelectionModelChange={this.handleRowSelected}/>
                 </div>

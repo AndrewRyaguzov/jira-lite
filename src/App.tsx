@@ -1,9 +1,8 @@
 import React, {Component} from 'react'
-import UserProfileDialog from './components/dialogs/user/UserProfileDialog';
 import MainView from './components/MainView';
 import WorkspaceView from './components/workflow/WorkspaceView';
 import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
-import { JwtService } from './services/JwtService';
+import { StorageService } from './services/StorageService';
 
 type States = {
     loggedIn: boolean;
@@ -16,11 +15,18 @@ class App extends Component<{},States> {
 
         let loggedIn = false;
         let isAdmin = false;
-        const token = JwtService.getToken();
+        const token = StorageService.getToken();
         if (token) {
             // TODO: Влепить проверку, что у меня в сторедже вообще нормальный токен, а не мусор
             loggedIn = true;
             isAdmin = token.roles.some(x => x === 'ADMIN');
+        }
+
+        const company = StorageService.getCompany();
+        if (company) {
+            loggedIn = false;
+            isAdmin = false;
+            StorageService.removeToken();
         }
 
         this.state = {
@@ -45,7 +51,7 @@ class App extends Component<{},States> {
                         {loggedIn ? <Redirect to="/workspace" /> : <MainView onLogin={this.handleLogin}/>}
                     </Route>
                     <Route exact path="/workspace">
-                        {loggedIn ? <WorkspaceView isAdmin={isAdmin}/> : <Redirect to="/"/>}
+                        {loggedIn ? <WorkspaceView isAdmin={isAdmin} onLogout={this.handleLogout}/> : <Redirect to="/"/>}
                     </Route>
                 </Router>
             </div>
