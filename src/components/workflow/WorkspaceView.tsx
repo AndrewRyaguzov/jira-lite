@@ -65,7 +65,8 @@ class WorkspaceView extends Component<Props, States> {
                     <Toolbar>
                         <Tabs value={currentTab} onChange={this.handleTabChange}>
                             <Tab label="Задачи" className={classes.toolBar}/>
-                            <Tab label="Сотрудники" disabled={!isAdmin} className={classes.toolBar}/>
+                            {isAdmin && 
+                            <Tab label="Сотрудники" className={classes.toolBar}/>}
                         </Tabs>
                         <IconButton className={classes.buttons}
                                     onClick={this.handleOpenMenu}>

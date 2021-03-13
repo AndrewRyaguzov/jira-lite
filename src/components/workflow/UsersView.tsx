@@ -12,9 +12,9 @@ import { ApiService } from '../../services/ApiService';
 import { UserDto } from '../../models/UserDto';
 
 const columns: GridColDef[] = [
-    { field: 'lastName', headerName: 'Фамилия', width: 250 },
-    { field: 'firstName', headerName: 'Имя', width: 250 },
-    { field: 'type', headerName: 'Тип',  width: 130 },
+    { field: 'lastName', headerName: 'Фамилия', width: 200 },
+    { field: 'firstName', headerName: 'Имя', width: 200 },
+    { field: 'type', headerName: 'Тип',  width: 170 },
     { field: 'phone', headerName: 'Телефон',  width: 200 },
     { field: 'status', headerName: 'Статус',  width: 130 },
   ];
@@ -51,14 +51,11 @@ class UsersView extends Component<Props, States> {
     componentDidMount() {
         this.fetchUsers();    
     }
-    fetchUsers = () => {
+    fetchUsers = async () => {
         this.setState({isLoading: true});
-        ApiService.getCompanyUsers()
-        .then(x => x.json())
-        .then(x => {
-            this.setState({ data: JSON.parse(x) as UserDto[], isLoading: false })
-        })
-        .finally(() => this.setState({ isLoading: false }));
+        const response = await ApiService.getCompanyUsers().then(x => x.json());
+        
+        this.setState({ data: response as UserDto[], isLoading: false });
     }
     getRows = () => {
         //return [{id: 121, lastName: 'Snow', firstName: 'Jon', type: "Что-то", phone: "+799999999", status: "UserStat" }];

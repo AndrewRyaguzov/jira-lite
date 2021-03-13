@@ -71,9 +71,14 @@ class LoginDialog extends Component<Props, States> {
             .finally(() => this.setState({isLoading: false}));
         
         if(signInResponse.ok) {
-            const response = await signInResponse.json();
-            StorageService.setToken(response.token);
-            StorageService.setCompany(response.company.id);
+            try {
+                const response = await signInResponse.json();
+                StorageService.setToken(response.token);
+                StorageService.setCompany(response.company.id);
+            } catch (e) {
+                console.log(e);
+                return
+            }
             this.handleClose();
             this.props.onLogin();
         } else {

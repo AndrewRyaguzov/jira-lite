@@ -3,11 +3,19 @@ import JwtDecode from "jwt-decode";
 const userToken = "token";
 const company = "company_id";
 export class StorageService {
-    static getToken = (): string | null | any => {
+    static getToken = (): string | null => {
+        const storedToken = localStorage.getItem(userToken);
+        if(storedToken) {
+            return storedToken;
+        }
+        return null;
+    }
+    static getDetailToken = (): any => {
         const storedToken = localStorage.getItem(userToken);
         if(storedToken) {
             return JwtDecode(storedToken);
         }
+
         return null;
     }
     static setToken = (token: string) => {

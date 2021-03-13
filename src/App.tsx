@@ -15,7 +15,7 @@ class App extends Component<{},States> {
 
         let loggedIn = false;
         let isAdmin = false;
-        const token = StorageService.getToken();
+        const token = StorageService.getDetailToken();
         if (token) {
             // TODO: Влепить проверку, что у меня в сторедже вообще нормальный токен, а не мусор
             loggedIn = true;
@@ -23,7 +23,7 @@ class App extends Component<{},States> {
         }
 
         const company = StorageService.getCompany();
-        if (company) {
+        if (!company) {
             loggedIn = false;
             isAdmin = false;
             StorageService.removeToken();
